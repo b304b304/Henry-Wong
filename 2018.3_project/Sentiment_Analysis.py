@@ -2,8 +2,10 @@
 import jieba
 import pandas
 
+data_path = "/home/nico/data/情感词汇/"
 
-def stopwords_list(file_path):
+
+def load_dictionary(file_path):
     # Create stopwords list
     stopwords = [line.strip() for line in open(file_path, 'r', encoding='utf-8').readlines()]
     return stopwords
@@ -12,7 +14,7 @@ def stopwords_list(file_path):
 def data_segment(data_list):
     segmented_data_list = []
     # Load stopwords list
-    stopwords = stopwords_list('./stopwords.txt')
+    stopwords = load_dictionary('./stopwords.txt')
     for data in data_list:
         segmented_data = jieba.cut(data.strip())
         stopwords_removed_data = ""
@@ -38,38 +40,73 @@ class EmotionDictionary:
 
     def __init__(self, path):
         # To load the dictionary
-        self.__Dictionary = pandas.read_excel(path, sheet_name=0, skiprows=[0])
-        self.__word_list = self.__Dictionary.ix[:, 0].tolist()
+        sentiment_dict = pandas.read_excel(path, sheet_name=None, header=0)
+        for sentiment, words in zip(sentiment_dict.keys(), sentiment_dict.values()):
+            if words.empty:
+                sentiment_dict.pop(sentiment)
+                continue
+            sentiment_dict[sentiment] = words.set_index('word')
+        self.__Dictionary = sentiment_dict
 
     def query(self, word):
         # Get the emotional value of the word
-        if word in self.__word_list:
-            self.__cur_word = self.__word_list.index(word)
-            emotional_values = self.__Dictionary.ix[self.__cur_word, :].tolist()
-            polar_value = self.__polarity_dic[emotional_values[6]]
-            emotional_value = emotional_values[5] * polar_value
-            return emotional_value
-        else:
-            return 0
+        result = []
+        sentiment_dict = self.__Dictionary
+        for sentiment in sentiment_dict.keys():
+            try:
+                result = sentiment_dict[sentiment].ix[word, :].tolist()
+                result.insert(0, sentiment)
+                result.insert(0, 0)
+                break
+            except Exception:
+                pass
+        return result
 
 
-def emotion_calculate(segmented_data):
+def emotion_calculate(segmented_data, emo_lo, neg_dict):
     # Calculate the value of emotion
-    # Load the emotional dictionary Emotive Lexicon Ontology
-    elo = EmotionDictionary("/home/nico/data/情感词汇/情感词汇本体.xlsx")
-    segmented_data_list = segmented_data.split(" ")
-    emotion_value_of_data = 0
-    for word in segmented_data_list:
-        emotion_value_of_data += elo.query(word)
-    return emotion_value_of_data
+    # Emo_lo means the Emotive Lexicon Ontology
+    # Neg_dict means the negative dictionary
+    # Set default sentiment none
+    sentiment = None
+    sentiment_dict = {
+        # The intensity of sentiment
+        "happy": 0,
+        "good": 0,
+        "angry": 0,
+        "sorrow": 0,
+        "fear": 0,
+        "evil": 0,
+        "shock": 0
+    }
+    words = segmented_data.split(" ")
+    sentiment_extract_result = []
+    for word in words:
+        query_result = emo_lo.query(word)
+        if word in neg_dict:
+            sentiment_extract_result.append([1])
+        elif not len(query_result) == 0:
+            sentiment_extract_result.append(query_result)
+    for i in range(len(sentiment_extract_result)):
+        # Traveling sentiment extract result
+        result = sentiment_extract_result[i]
+        # If the front of the emotional word is not a negative word, add the intensity
+        # to the sentiment dictionary
+        if result[0] == 0:
+            if i - 1 >= 0:
+                if result[0] != 1:
+                    sentiment_dict[result[1]] += result[3]
+            if i - 1 < 0:
+                sentiment_dict[result[1]] += result[3]
+    max_intensity = max(sentiment_dict.items(), key=lambda x: x[1])
+    if max_intensity[1] != 0:
+        sentiment = max_intensity[0]
+    return sentiment
+
 
 if __name__ == "__main__":
-    cleaned_data_list = []
-    with open("./cleaned_data.txt") as cleaned_data:
-        for cleaned_data_line in cleaned_data.readlines():
-            cleaned_data_list.append(cleaned_data_line)
-    segmented_cleaned_data_list = data_segment(cleaned_data_list)
-    with open("calculated_data.txt", "a+") as cal_data:
-        for c_data, s_c_data in zip(cleaned_data_list, segmented_cleaned_data_list):
-            emotion_value = "emotion_value:" + str(emotion_calculate(s_c_data))
-            cal_data.write(emotion_value + " " + c_data)
+    elo = EmotionDictionary(data_path + "qx_dict.xlsx")
+    neg = load_dictionary(data_path + "否定词.txt")
+    raw_data = ["这真是锦瑟年华"]
+    seg_data = data_segment(raw_data)
+    print(emotion_calculate(seg_data[0], elo, neg))
