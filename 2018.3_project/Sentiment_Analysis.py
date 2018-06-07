@@ -11,19 +11,17 @@ def load_dictionary(file_path):
     return stopwords
 
 
-def data_segment(data_list):
-    segmented_data_list = []
+def data_segment(data):
     # Load stopwords list
     stopwords = load_dictionary('./stopwords.txt')
-    for data in data_list:
-        segmented_data = jieba.cut(data.strip())
-        stopwords_removed_data = ""
-        for word in segmented_data:
-            if word not in stopwords:
-                if word != '\t':
-                    stopwords_removed_data += (word + " ")
-        segmented_data_list.append(stopwords_removed_data)
-    return segmented_data_list
+    segmented_data = jieba.cut(data.strip())
+    stopwords_removed_data = ""
+    for word in segmented_data:
+        if word not in stopwords:
+            if word != '\t':
+                stopwords_removed_data += (word + " ")
+    stopwords_removed_data.strip()
+    return stopwords_removed_data
 
 
 class EmotionDictionary:
@@ -107,6 +105,6 @@ def emotion_calculate(segmented_data, emo_lo, neg_dict):
 if __name__ == "__main__":
     elo = EmotionDictionary(data_path + "qx_dict.xlsx")
     neg = load_dictionary(data_path + "否定词.txt")
-    raw_data = ["这真是锦瑟年华"]
+    raw_data = "这真是锦瑟年华"
     seg_data = data_segment(raw_data)
-    print(emotion_calculate(seg_data[0], elo, neg))
+    print(emotion_calculate(seg_data, elo, neg))
