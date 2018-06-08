@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import copy
 import jieba
 import pandas
+from Data_Cleaning import *
+from matplotlib import pyplot
 
 data_path = "/home/nico/data/情感词汇/"
 
@@ -61,12 +64,12 @@ class EmotionDictionary:
         return result
 
 
-def emotion_calculate(segmented_data, emo_lo, neg_dict):
+def sentiment_calculate(segmented_data, emo_lo, neg_dict):
     # Calculate the value of emotion
     # Emo_lo means the Emotive Lexicon Ontology
     # Neg_dict means the negative dictionary
     # Set default sentiment none
-    sentiment = None
+    sentiment = "none"
     sentiment_dict = {
         # The intensity of sentiment
         "happy": 0,
@@ -102,9 +105,63 @@ def emotion_calculate(segmented_data, emo_lo, neg_dict):
     return sentiment
 
 
+def time_to_date(time):
+    # Change time to date that is accurate to day
+    # Such as 2018-1-1 00:00:00 -> 2018-1-1
+    return time.split(' ')[0]
+
+
+def get_data_line(data):
+    date_line = list(set(data.ix[:, "发布时间"].tolist()))
+    date_line.sort()
+    for i in range(len(date_line)):
+        date_line[i] = [date_line[i], 0]
+    return date_line
+
+
+def statistics(date_line, grouped):
+    # Count sentiment of each day
+    l1 = list() + date_line
+    result_dict = {
+        "happy": list(),
+        "good": list(),
+        "angry": list(),
+        "sorrow": list(),
+        "fear": list(),
+        "evil": list(),
+        "shock": list(),
+        "none": list()
+    }
+    for key in result_dict.keys():
+        result_dict[key] = copy.deepcopy(l1)
+    for name, group in grouped:
+        for date in result_dict[str(name[0])]:
+            if date[0] == name[1]:
+                date[1] += group.count()
+    result_dict["happy"][0][1] += 1
+    return result_dict
+
+
+def get_chart(coordinate_dict):
+    # Draw a line chart by coordinate
+    pyplot.figure()
+    pyplot.title("Time series")
+    x = [v[0] for v in coordinate_dict["happy"]]
+    for key, value in zip(coordinate_dict.keys(), coordinate_dict.values()):
+        pyplot.plot(x, [v[1] for v in value], label=key)
+    pyplot.legend()
+    pyplot.show()
+
 if __name__ == "__main__":
+    # Test
     elo = EmotionDictionary(data_path + "qx_dict.xlsx")
     neg = load_dictionary(data_path + "否定词.txt")
-    raw_data = "这真是锦瑟年华"
-    seg_data = data_segment(raw_data)
-    print(emotion_calculate(seg_data, elo, neg))
+    data_path = get_file_path("blog")
+    blog_data = read_data(data_path[0])
+    blog_data["发布时间"] = blog_data["发布时间"].apply(time_to_date)
+    blog_data["博文"] = blog_data["博文"].apply(clean_blog_data)
+    blog_data["博文"] = blog_data["博文"].apply(data_segment)
+    blog_data["博文"] = blog_data["博文"].apply(lambda sentence: sentiment_calculate(sentence, elo, neg))
+    grouped_data = blog_data.groupby(["博文", "发布时间"])["博主头像"]
+    count_dict = statistics(get_data_line(blog_data), grouped_data)
+    get_chart(count_dict)

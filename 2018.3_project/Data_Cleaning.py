@@ -20,7 +20,7 @@ def get_file_path(data_type):
 
 def read_data(file_path):
     # Fetches data from a sheet
-    blog_data = pandas.read_excel(file_path, sheet_name=0, skiprows=[0])
+    blog_data = pandas.read_excel(file_path, sheet_name=0, header=0)
     return blog_data
 
 
