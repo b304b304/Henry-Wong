@@ -29,15 +29,6 @@ def data_segment(data):
 
 class EmotionDictionary:
     # The Emotion Dictionary class
-    # The pointer to current word
-    __cur_word = 0
-    # The mapping from polarity ro polar value
-    __polarity_dic = {
-        0: 0,
-        1: 1,
-        2: -1,
-        3: 0
-    }
 
     def __init__(self, path):
         # To load the dictionary
