@@ -25,14 +25,19 @@ def read_data(file_path):
 
 
 def clean_blog_data(data):
+    if type(data) != type('string'):
+        return '0000'
     data = re.sub("【[\w\W]*?】|#[\w\W]*?#", "", data)
+    data = re.sub("回复@[\w\W]*?:|//@[\w\W]*?:|\|[\w\W]*?\.\.\.", "", data)
     return data
 
 
 def clean_comment_data(data):
+    if len(data) == 0:
+        return '0000'
     # Remove the id of users
     data = "_UserId" + data
-    data = re.sub("[_UserId\w\W]*?：|回复@[\w\W]*?:|//@[\w\W]*?:", "", data)
+    data = re.sub("_UserId[\w\W]*?：|回复@[\w\W]*?:|//@[\w\W]*?:|\|[\w\W]*?\.\.\.", "", data)
     data = re.sub("【[\w\W]*?】|#[\w\W]*?#", "", data)
     return data
 
