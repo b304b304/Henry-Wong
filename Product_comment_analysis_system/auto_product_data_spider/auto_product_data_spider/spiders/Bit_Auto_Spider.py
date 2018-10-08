@@ -3,11 +3,13 @@ from __future__ import division
 
 import re
 import time
+import pandas
 import scrapy
 import urllib.request
 from scrapy.http import Request
 
 from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider import settings
+from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider.items import DataProductInfo
 from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider.items import DataProductComment
 
 
@@ -15,7 +17,7 @@ class BitAutoSpider(scrapy.Spider):
 
     name = "BitAuto"
     cls = 1
-    start_urls = settings.ROOT_URLS
+    start_urls = settings.ROOT_URLS[6: 9]
     product_id = 0
     product_comment_id = 0
     comment_num = [0 * i for i in range(30)]
@@ -46,11 +48,21 @@ class BitAutoSpider(scrapy.Spider):
 
         for pack in map(list, zip(urls, product_names, product_models)):
             url, product_name, product_model = pack[0], pack[1], pack[2]
+            self.product_id += 1
+            # yield DataProductInfo(
+            #     Product_ID=self.product_id,
+            #     RootURL_ID=response.meta["rootURL_Id"],
+            #     Product_Name=product_name,
+            #     Product_Model=product_model,
+            #     CommentNum=0,
+            #     URL=url,
+            #     UpdateTime=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
+            #     User=self.user
+            # )
             yield Request(url, callback=self.get_more_ks)
 
     def get_more_ks(self, response):
         self.cls = 1
-        self.product_id += 1
         html = response.text
         try:
             more_url = re.findall('hidden" value="(.+?)"', html)[0]
@@ -130,6 +142,7 @@ class BitAutoSpider(scrapy.Spider):
                     score_source_n.append(score_n)
                 except Exception as e:
                     print(e)
+                comment = '。' + comment
                 comment = re.sub("<[\w\W]+?>", '', comment)
                 comment = re.sub("&nbsp;", '', comment)
                 comment = re.sub('\s', '', comment)
@@ -149,6 +162,7 @@ class BitAutoSpider(scrapy.Spider):
         item = DataProductComment(
             Product_Comment_ID=self.product_comment_id,
             product_ID=response.meta["product_id"],
+            Product_Type_ID=4,
             Reviewer=reviewer,
             Location=location,
             Comment=f_comment,

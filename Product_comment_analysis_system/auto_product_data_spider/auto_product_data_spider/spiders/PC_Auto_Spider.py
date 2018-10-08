@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+import os
 import re
 import time
+import pandas
 import scrapy
 import urllib.request
 from scrapy.http import Request
 
 from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider import settings
+from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider.items import DataProductInfo
 from Product_comment_analysis_system.auto_product_data_spider.auto_product_data_spider.items import DataProductComment
 
 
@@ -15,12 +18,23 @@ class PCAutoSpider(scrapy.Spider):
 
     name = "AutoSpider"
     cls = 1
-    start_urls = settings.ROOT_URLS
+    start_urls = settings.ROOT_URLS[3: 6]
     product_id = 30
     product_comment_id = 4619
     user = "wdh"
+    column_name = [
+        "Product_ID",
+        "RootURL_ID",
+        "Product_Name",
+        "Product_Model",
+        "URL",
+        "CommentNum",
+        "UpdateTime",
+        "User"
+    ]
 
     def start_requests(self):
+
         for url in self.start_urls:
             yield Request(url[0], callback=self.parse, meta={"rootURL_Id": url[1]})
 
@@ -41,33 +55,37 @@ class PCAutoSpider(scrapy.Spider):
             else:
                 max_page = 1
             comment_num = max_page * 10
-            yield Request(url, callback=self.get_k)
-            for i in range(2, max_page):
-                yield Request(
-                    url + 'p' + str(i) + ".html",
-                    callback=self.get_k
-                )
-            self.product_id += 1
+
             # yield DataProductInfo(
             #     Product_ID=self.product_id,
             #     RootURL_ID=response.meta["rootURL_Id"],
             #     Product_Name=product_name,
             #     Product_Model=product_model,
             #     CommentNum=comment_num,
+            #     URL=url,
             #     UpdateTime=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
             #     User=self.user
             # )
 
+            yield Request(url, callback=self.get_k)
+            for i in range(2, max_page):
+                yield Request(
+                    url + 'p' + str(i) + ".html",
+                    callback=self.get_k
+                )
+
     def get_k(self, response):
         self.cls = 1
+        self.product_id += 1
         html = response.text
         comment_classes = re.findall('<div class="litDy clearfix">([\w\W]+?)</table>', html)
         for comment_class in comment_classes:
             reviewer = re.findall("<a href=\"//my.pcauto.com.cn/\d+?/\" target=\"_blank\">([^<>]+?)</a>", comment_class)
             location = re.findall('<em>购买地点</em>([\w\W]*?)</div>', comment_class)
-            comments = re.findall('class="dianPing[\w\W]+?>([\w\W]+?)<div class="desline', comment_class)
+            comments = re.findall('<div class="conLit.*?">([\w\W]+?)</div>', comment_class)
             f_comment = []
             for comment in comments:
+                comment = '。' + comment
                 comment = re.sub("<[\w\W]+?>", '', comment)
                 comment = re.sub('\s', '', comment)
                 f_comment.append(comment)
@@ -85,6 +103,7 @@ class PCAutoSpider(scrapy.Spider):
             item = DataProductComment(
                 Product_Comment_ID=self.product_comment_id,
                 product_ID=self.product_id,
+                Product_Type_ID=4,
                 Reviewer=reviewer,
                 Location=location,
                 Comment=f_comment,

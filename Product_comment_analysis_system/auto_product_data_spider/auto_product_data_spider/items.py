@@ -15,6 +15,7 @@ class DataProductInfo(scrapy.Item):
     Product_Name = scrapy.Field()
     Product_Model = scrapy.Field()
     CommentNum = scrapy.Field()
+    URL = scrapy.Field()
     UpdateTime = scrapy.Field()
     User = scrapy.Field()
 
@@ -22,6 +23,7 @@ class DataProductInfo(scrapy.Item):
 class DataProductComment(scrapy.Item):
     Product_Comment_ID = scrapy.Field()
     product_ID = scrapy.Field()
+    Product_Type_ID = scrapy.Field()
     Reviewer = scrapy.Field()
     Location = scrapy.Field()
     Comment = scrapy.Field()

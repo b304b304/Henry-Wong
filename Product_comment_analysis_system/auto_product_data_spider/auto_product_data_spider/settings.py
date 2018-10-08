@@ -89,7 +89,10 @@ HTTPCACHE_DIR = 'httpcache'
 HTTPCACHE_IGNORE_HTTP_CODES = []
 HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
-# My settings
+# ----------------- #
+#    My settings    #
+# ----------------- #
+
 # START_URLS = [
 #     "https://car.autohome.com.cn/price/brand-36.html#pvareaid=3311273",
 #     "https://car.autohome.com.cn/price/brand-15.html",
@@ -104,17 +107,15 @@ HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 ROOT_URLS = [
     ["https://car.autohome.com.cn/price/brand-36.html#pvareaid=3311273", 34],
-    # ["https://car.autohome.com.cn/price/brand-15.html", 35],
-    # ["https://car.autohome.com.cn/price/brand-33.html", 36],
-    # ["http://price.pcauto.com.cn/price/nb20/?ad=5657", 37],
-    # ["http://price.pcauto.com.cn/price/nb4/?ad=5657", 38],
-    # ["http://price.pcauto.com.cn/price/nb1/?ad=5657", 39],
-    # ["http://car.bitauto.com/mercedesbenz/", 40],
-    # ["http://car.bitauto.com/bmw/", 41],
-    # ["http://car.bitauto.com/audi/", 42]
+    ["https://car.autohome.com.cn/price/brand-15.html", 35],
+    ["https://car.autohome.com.cn/price/brand-33.html", 36],
+    ["http://price.pcauto.com.cn/price/nb20/?ad=5657", 37],
+    ["http://price.pcauto.com.cn/price/nb4/?ad=5657", 38],
+    ["http://price.pcauto.com.cn/price/nb1/?ad=5657", 39],
+    ["http://car.bitauto.com/mercedesbenz/", 40],
+    ["http://car.bitauto.com/bmw/", 41],
+    ["http://car.bitauto.com/audi/", 42]
 ]
 
-AUTO_HOME_HEADERS = {
-    "user-agent": "MQQBrowser/26 Mozilla/5.0 (linux; U; Android 2.3.7; zh-cn; MB200 Build/GRJ22; CyanogenMod-7) "
-                  "AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1"
-}
+product_info_path = "/home/nico/Github/Henry-Wong/Product_comment_analysis_system/auto_product_data_spider/" \
+                    "/auto_product_data_spider/spiders/Product_info/"
